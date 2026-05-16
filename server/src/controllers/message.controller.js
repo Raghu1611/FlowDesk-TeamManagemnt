@@ -55,18 +55,26 @@ const getRooms = async (req, res) => {
     const accessibleChannels = CHANNELS.filter(c => c.roles.includes(userRole));
 
     // Get project channels the user belongs to
-    const projects = await Project.find({
-      $or: [
-        { members: userId },
-        { manager: userId },
-        ...(userRole === 'admin' ? [{}] : [])
-      ]
-    }).select('title _id');
+    let projectQuery;
+    if (userRole === 'admin') {
+      projectQuery = {}; // admins see all projects
+    } else {
+      projectQuery = { $or: [{ members: userId }, { manager: userId }] };
+    }
+    const projects = await Project.find(projectQuery)
+      .select('title _id members manager')
+      .populate('members', 'name')
+      .populate('manager', 'name');
 
     const projectChannels = projects.map(p => ({
       name: `project:${p._id}`,
       label: p.title,
-      type: 'project'
+      type: 'project',
+      memberCount: (p.members?.length || 0) + (p.manager ? 1 : 0),
+      members: [
+        ...(p.manager ? [{ name: p.manager.name, role: 'manager' }] : []),
+        ...(p.members || []).map(m => ({ name: m.name }))
+      ]
     }));
 
     res.json({ success: true, data: [...accessibleChannels, ...projectChannels] });

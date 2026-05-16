@@ -206,8 +206,11 @@ const ChatPage = () => {
                 const label = room.label || room;
                 return (
                   <button key={name} onClick={() => switchRoom(name)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${activeRoom === name ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-background-hover hover:text-text-primary'}`}>
-                    <FolderKanban className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{label}</span>
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${activeRoom === name ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-background-hover hover:text-text-primary'}`}
+                    title={room.members?.map(m => m.name).join(', ')}>
+                    <FolderKanban className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate flex-1 text-left">{label}</span>
+                    {room.memberCount && <span className="text-[10px] bg-background-hover px-1.5 py-0.5 rounded-full">{room.memberCount}</span>}
                   </button>
                 );
               })}
@@ -223,6 +226,12 @@ const ChatPage = () => {
           {(() => { const Icon = getRoomIcon(activeRoom); return <Icon className="w-4 h-4 text-text-muted" />; })()}
           <h2 className="font-display font-semibold text-text-primary text-sm truncate">{activeLabel}</h2>
           <span className="text-[10px] text-text-muted font-medium bg-background-hover px-2 py-0.5 rounded-full">{messages.length}</span>
+          {activeRoom.startsWith('project:') && (() => {
+            const room = rooms.find(r => r.name === activeRoom);
+            return room?.members ? (
+              <span className="text-[10px] text-text-muted ml-auto hidden sm:block">{room.members.map(m => m.name).join(', ')}</span>
+            ) : null;
+          })()}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
