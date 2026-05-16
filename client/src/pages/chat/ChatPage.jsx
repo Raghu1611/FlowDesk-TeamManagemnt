@@ -400,8 +400,16 @@ const ChatPage = () => {
               const roleBadge = senderRole === 'admin' ? 'bg-danger/10 text-danger' : senderRole === 'manager' ? 'bg-accent/10 text-accent' : '';
               return (
                 <div key={msg._id || idx} className={`group flex gap-3 ${own ? 'flex-row-reverse' : ''}`}>
-                  <div className="relative shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-[11px] font-bold text-accent">
+                  <div
+                    onClick={() => {
+                      if (!own && typeof msg.sender === 'object' && msg.sender?._id) {
+                        startDm({ _id: msg.sender._id, name: msg.sender.name, email: msg.sender.email, role: msg.sender.role, avatar: msg.sender.avatar });
+                      }
+                    }}
+                    title={!own ? `Message ${senderName}` : ''}
+                    className={`relative shrink-0 ${!own ? 'cursor-pointer' : ''}`}
+                  >
+                    <div className={`w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-[11px] font-bold text-accent ${!own ? 'hover:ring-2 hover:ring-accent/30 transition-all' : ''}`}>
                       {senderName.charAt(0).toUpperCase()}
                     </div>
                     {(() => {
@@ -412,7 +420,14 @@ const ChatPage = () => {
                   </div>
                   <div className={`flex flex-col max-w-[70%] ${own ? 'items-end' : 'items-start'}`}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-text-primary">{senderName}</span>
+                      <span
+                        className={`text-xs font-semibold text-text-primary ${!own ? 'hover:text-accent cursor-pointer transition-colors' : ''}`}
+                        onClick={() => {
+                          if (!own && typeof msg.sender === 'object' && msg.sender?._id) {
+                            startDm({ _id: msg.sender._id, name: msg.sender.name, email: msg.sender.email, role: msg.sender.role, avatar: msg.sender.avatar });
+                          }
+                        }}
+                      >{senderName}</span>
                       {roleBadge && <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${roleBadge}`}>{senderRole}</span>}
                       <span className="text-[10px] text-text-muted">{formatTime(msg.createdAt)}</span>
                       {msg.edited && <span className="text-[9px] text-text-muted italic">(edited)</span>}
