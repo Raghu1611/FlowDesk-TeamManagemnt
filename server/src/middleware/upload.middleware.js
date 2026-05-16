@@ -19,7 +19,14 @@ if (hasCloudinary) {
   });
   storage = new CloudinaryStorage({
     cloudinary,
-    params: { folder: 'flowdesk_attachments', resource_type: 'auto' },
+    params: (req, file) => {
+      const isImage = file.mimetype.startsWith('image/');
+      return {
+        folder: 'flowdesk_attachments',
+        resource_type: isImage ? 'image' : 'raw',
+        public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`,
+      };
+    },
   });
 } else {
   const uploadDir = path.join(__dirname, '../../uploads');
