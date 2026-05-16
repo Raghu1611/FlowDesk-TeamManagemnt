@@ -79,7 +79,49 @@ Database - MongoDB Atlas.
 
 ## Architecture
 
+```
++--------------------------------------------------------------+
+|                     CLIENT  (React + Vite)                   |
+|                                                              |
+|   Pages       Components       Redux Store     Socket.IO    |
+|   (Routes)    (UI Layer)       (State Mgmt)    Client        |
+|      |                            |                |         |
+|      |         Axios API calls    |                |         |
++------+----------------------------+----------------+---------+
+       |         HTTP / REST        |     WebSocket  |
+       v                            v                v
++------+----------------------------+----------------+---------+
+|                   SERVER  (Node.js + Express)                |
+|                                                              |
+|   Routes      Middleware       Controllers     Socket.IO     |
+|   (Express)   (Auth, Zod,     (Business       Server         |
+|               Upload)          Logic)                        |
+|                                   |                          |
+|                            Mongoose Models                   |
+|                                   |                          |
++-----------------------------------+--------------------------+
+                                    |
+                             +------v------+
+                             |   MongoDB   |
+                             |   Atlas     |
+                             +------+------+
+                                    |
+                             +------v------+
+                             | Cloudinary  |
+                             | (Files &    |
+                             |  Avatars)   |
+                             +-------------+
+```
+
 The frontend is a single-page React application that talks to the backend through Axios for REST calls and Socket.IO for real-time events. The backend is an Express server with route handlers organized into controllers. Mongoose models define the database schemas. Socket.IO runs alongside Express on the same server for live chat, presence tracking, and real-time notifications. File uploads go through Multer to Cloudinary and the URLs are stored in MongoDB.
+
+### How the layers connect
+
+The React app sends HTTP requests through Axios to Express route handlers. Each route passes through authentication middleware (JWT verification) and validation middleware (Zod schemas) before reaching the controller. Controllers interact with Mongoose models to read and write data in MongoDB.
+
+For real-time features, the React app maintains a persistent WebSocket connection through Socket.IO. When a user sends a chat message, edits a task, or triggers any live event, the Socket.IO server processes it and broadcasts updates to the relevant rooms. Online presence, typing indicators, and DM notifications all flow through this WebSocket layer.
+
+File uploads (task attachments and profile avatars) go from the client as multipart form data through Multer middleware, which streams them to Cloudinary. The returned CDN URL is then saved in the corresponding MongoDB document.
 
 ---
 

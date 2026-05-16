@@ -43,18 +43,23 @@ const Navbar = ({ onMenuClick }) => {
           <Menu className="w-5 h-5" />
         </button>
         
-        <div className="relative group w-full max-w-sm hidden sm:block">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted group-focus-within:text-accent transition-colors">
-            <Search className="h-3.5 w-3.5" />
+        <div className="relative group w-full max-w-md hidden sm:block">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted group-focus-within:text-accent transition-colors duration-200">
+            <Search className="h-4 w-4" />
           </div>
           <input
             type="text"
-            className="block w-full pl-9 pr-3 py-1.5 border border-border rounded-lg text-sm bg-background-base text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-            placeholder="Search..."
+            className="block w-full pl-10 pr-16 py-2 border border-border rounded-xl text-sm bg-background-base/80 backdrop-blur-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-background-base focus:shadow-[0_0_0_4px_rgba(0,122,255,0.08)] transition-all duration-200 hover:border-border/80 hover:bg-background-base"
+            placeholder="Search tasks, projects, people..."
           />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-border bg-background-hover px-1.5 font-mono text-[10px] font-medium text-text-muted">
-            ⌘K
-          </kbd>
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1">
+            <kbd className="h-5 items-center gap-0.5 rounded-md border border-border bg-background-hover/80 px-1.5 font-mono text-[10px] font-medium text-text-muted inline-flex">
+              Ctrl
+            </kbd>
+            <kbd className="h-5 items-center gap-0.5 rounded-md border border-border bg-background-hover/80 px-1.5 font-mono text-[10px] font-medium text-text-muted inline-flex">
+              K
+            </kbd>
+          </div>
         </div>
       </div>
       

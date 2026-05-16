@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchTasks } from '../../features/tasks/tasksSlice';
 import { deleteTaskAPI, updateTaskAPI, addCommentAPI } from '../../api/task.api';
 import { getUsersAPI } from '../../api/user.api';
-import { Clock, MessageSquare, Paperclip, MoreHorizontal, Trash2, Edit3, X, Send, Filter, Plus, Search } from 'lucide-react';
+import { Clock, MessageSquare, Paperclip, MoreHorizontal, Trash2, Edit3, X, Send, Filter, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateTaskModal from '../../components/tasks/CreateTaskModal';
@@ -100,25 +100,44 @@ const TasksPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2.5 items-center bg-background-surface border border-border rounded-xl p-3 shadow-card">
-        <div className="relative flex-1 min-w-[160px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+      <div className="flex flex-wrap gap-3 items-center bg-background-surface border border-border rounded-2xl p-4 shadow-card">
+        <div className="relative flex-1 min-w-[200px] max-w-sm group">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted group-focus-within:text-accent transition-colors duration-200">
+            <Search className="w-4 h-4" />
+          </div>
           <input
-            type="text" placeholder="Search tasks..."
+            type="text" placeholder="Search by task name..."
             value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})}
-            className="w-full pl-9 pr-3 py-1.5 bg-background-base border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            className="w-full pl-10 pr-4 py-2.5 bg-background-base border border-border rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50 focus:shadow-[0_0_0_4px_rgba(0,122,255,0.06)] hover:border-border/80 transition-all duration-200"
           />
         </div>
-        <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="px-3 py-1.5 bg-background-base border border-border rounded-lg text-sm focus:outline-none focus:border-accent">
-          <option value="">All Status</option>
-          {Object.entries(statusMap).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <select value={filters.priority} onChange={e => setFilters({...filters, priority: e.target.value})} className="px-3 py-1.5 bg-background-base border border-border rounded-lg text-sm focus:outline-none focus:border-accent">
-          <option value="">All Priority</option>
-          <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option>
-        </select>
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 bg-background-base border border-border rounded-xl px-3 py-1 hover:border-border/80 transition-colors">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-text-muted shrink-0" />
+            <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} className="py-1.5 bg-transparent text-sm text-text-primary focus:outline-none cursor-pointer font-medium min-w-[90px]">
+              <option value="">All Status</option>
+              <option value="backlog">Backlog</option>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="in_review">In Review</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-1.5 bg-background-base border border-border rounded-xl px-3 py-1 hover:border-border/80 transition-colors">
+            <Filter className="w-3.5 h-3.5 text-text-muted shrink-0" />
+            <select value={filters.priority} onChange={e => setFilters({...filters, priority: e.target.value})} className="py-1.5 bg-transparent text-sm text-text-primary focus:outline-none cursor-pointer font-medium min-w-[90px]">
+              <option value="">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+        </div>
         {(filters.status || filters.priority || filters.search) && (
-          <button onClick={() => setFilters({ status: '', priority: '', search: '' })} className="text-xs text-accent hover:text-accent-hover font-semibold px-2">Clear</button>
+          <button onClick={() => setFilters({ status: '', priority: '', search: '' })} className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-semibold px-3 py-2 rounded-xl hover:bg-accent/5 transition-colors">
+            <X className="w-3.5 h-3.5" /> Clear filters
+          </button>
         )}
       </div>
 
