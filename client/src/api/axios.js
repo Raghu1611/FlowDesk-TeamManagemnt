@@ -30,6 +30,7 @@ export const resolveFileUrl = (url) => {
 
 export const resolveDownloadUrl = (url) => {
   if (!url) return '';
+  if (url.startsWith('http')) return url;
   const filename = url.split('/').pop();
   return `${SERVER_URL}/download/${filename}`;
 };
