@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background-base: var(--bg-base);
+  --color-background-surface: var(--bg-surface);
+  --color-background-elevated: var(--bg-elevated);
+  --color-background-hover: var(--bg-hover);
+  
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  
+  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Sora", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03);
+  --shadow-cardHover: 0 4px 12px 0 rgb(0 0 0 / 0.06), 0 2px 4px -1px rgb(0 0 0 / 0.04);
+  --shadow-modal: 0 20px 60px -12px rgb(0 0 0 / 0.25);
+  --shadow-darkSm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-darkLg: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+@layer base {
+  :root {
+    --bg-base: #f8f9fc;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f1f3f9;
+    --bg-hover: #ebedf5;
+    --border: #e3e5ef;
+    --border-subtle: #eff0f6;
+    --text-primary: #0c0f1d;
+    --text-secondary: #4b5271;
+    --text-muted: #9197b3;
+    --accent: #635bff;
+    --accent-hover: #5046e5;
+    --accent-soft: rgba(99, 91, 255, 0.08);
+    --success: #0ea371;
+    --warning: #f5a623;
+    --danger: #ef4444;
+    --info: #0ea5e9;
+  }
+
+  .dark {
+    --bg-base: #0a0a0c;
+    --bg-surface: #121215;
+    --bg-elevated: #1a1a1f;
+    --bg-hover: #222228;
+    --border: #2a2a30;
+    --border-subtle: #1e1e24;
+    --text-primary: #f0f0f2;
+    --text-secondary: #9898a4;
+    --text-muted: #56565f;
+    --accent: #7c7aff;
+    --accent-hover: #6b69e8;
+    --accent-soft: rgba(124, 122, 255, 0.1);
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --info: #38bdf8;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', sans-serif;
+  }
+
+  /* Scrollbar styling for both themes */
+  ::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px; 
+  }
+  ::-webkit-scrollbar-track { 
+    background: transparent; 
+  }
+  ::-webkit-scrollbar-thumb { 
+    background: var(--border); 
+    border-radius: 999px; 
+  }
+  ::-webkit-scrollbar-thumb:hover { 
+    background: var(--text-muted); 
+  }
+
+  /* Focus ring utility */
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent);
+  }
+
+  /* Smooth page transitions */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slideUp {
+    animation: slideUp 0.35s ease-out;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-elevated) 50%, var(--bg-hover) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+
+  /* Glass effect */
+  .glass {
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .dark .glass {
+    background: rgba(18,18,21,0.75);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+  }
+
+  /* Dark mode shadow overrides for depth */
+  .dark .shadow-card {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+  }
+  .dark .shadow-cardHover {
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.3), 0 2px 4px -1px rgb(0 0 0 / 0.2);
+  }
+  .dark .shadow-modal {
+    box-shadow: 0 20px 60px -12px rgb(0 0 0 / 0.6);
+  }
+}
