@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTasks } from '../../features/tasks/tasksSlice';
-import { deleteTaskAPI, updateTaskAPI, addCommentAPI } from '../../api/task.api';
+import { deleteTaskAPI, updateTaskAPI, addCommentAPI, addAttachmentAPI } from '../../api/task.api';
+import { resolveFileUrl, resolveDownloadUrl } from '../../api/axios';
 import { getUsersAPI } from '../../api/user.api';
-import { Clock, MessageSquare, Paperclip, MoreHorizontal, Trash2, Edit3, X, Send, Filter, Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { Clock, MessageSquare, Paperclip, MoreHorizontal, Trash2, Edit3, X, Send, Filter, Plus, Search, SlidersHorizontal, Upload, Loader2, FileText, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateTaskModal from '../../components/tasks/CreateTaskModal';
@@ -29,6 +30,8 @@ const TasksPage = () => {
   const [commentLoading, setCommentLoading] = useState(false);
   const [filters, setFilters] = useState({ status: '', priority: '', search: '' });
   const [users, setUsers] = useState([]);
+  const [attachUploading, setAttachUploading] = useState(false);
+  const attachInputRef = useRef(null);
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -85,6 +88,20 @@ const TasksPage = () => {
       toast.success('Comment added');
     } catch { toast.error('Failed to add comment'); }
     setCommentLoading(false);
+  };
+
+  const handleAttachUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedTask) return;
+    if (file.size > 10 * 1024 * 1024) return toast.error('File must be under 10 MB');
+    try {
+      setAttachUploading(true);
+      const res = await addAttachmentAPI(selectedTask._id, file);
+      setSelectedTask(res.data);
+      dispatch(fetchTasks());
+      toast.success('File attached');
+    } catch { toast.error('Failed to upload file'); }
+    finally { setAttachUploading(false); e.target.value = ''; }
   };
 
   return (
@@ -277,16 +294,25 @@ const TasksPage = () => {
                   </div>
                 )}
 
-                {selectedTask.attachments?.length > 0 && (
-                  <div>
-                    <label className="text-[10px] font-medium text-text-muted uppercase tracking-wider flex items-center gap-1"><Paperclip className="w-3 h-3" /> Attachments ({selectedTask.attachments.length})</label>
+                {/* Attachments */}
+                <div>
+                  <label className="text-[10px] font-medium text-text-muted uppercase tracking-wider flex items-center gap-1"><Paperclip className="w-3 h-3" /> Attachments ({selectedTask.attachments?.length || 0})</label>
+                  {selectedTask.attachments?.length > 0 && (
                     <div className="mt-1 space-y-1">
                       {selectedTask.attachments.map((a, i) => (
-                        <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" className="block text-xs text-accent hover:underline truncate">{a.name}</a>
+                        <a key={i} href={resolveDownloadUrl(a.url)} download={a.name} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-accent hover:underline truncate">
+                          <FileText className="w-3.5 h-3.5 flex-shrink-0" />{a.name}<Download className="w-3 h-3 flex-shrink-0 ml-auto" />
+                        </a>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                  <input type="file" ref={attachInputRef} onChange={handleAttachUpload} className="hidden" />
+                  <button onClick={() => attachInputRef.current?.click()} disabled={attachUploading}
+                    className="mt-2 flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors disabled:opacity-50">
+                    {attachUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    {attachUploading ? 'Uploading...' : 'Upload File'}
+                  </button>
+                </div>
 
                 {/* Comments */}
                 <div>

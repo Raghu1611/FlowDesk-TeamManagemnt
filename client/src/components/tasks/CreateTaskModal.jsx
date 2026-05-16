@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Loader2, Paperclip, FileText } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { createTaskAPI } from '../../api/task.api';
+import { createTaskAPI, addAttachmentAPI } from '../../api/task.api';
 import { getUsersAPI } from '../../api/user.api';
 import { getProjectsAPI } from '../../api/project.api';
 import toast from 'react-hot-toast';
@@ -12,6 +12,8 @@ const CreateTaskModal = ({ isOpen, onClose, users: propUsers }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState(propUsers || []);
   const [projects, setProjects] = useState([]);
+  const [files, setFiles] = useState([]);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     title: '', description: '', priority: 'medium', status: 'todo',
     assignee: '', project: '', dueDate: '', labels: ''
@@ -44,9 +46,16 @@ const CreateTaskModal = ({ isOpen, onClose, users: propUsers }) => {
         dueDate: formData.dueDate || undefined,
         labels: formData.labels ? formData.labels.split(',').map(l => l.trim()).filter(Boolean) : []
       };
-      await createTaskAPI(payload);
+      const res = await createTaskAPI(payload);
+      // Upload attached files
+      if (files.length > 0) {
+        for (const file of files) {
+          try { await addAttachmentAPI(res.data._id, file); } catch {}
+        }
+      }
       toast.success('Task created successfully');
       setFormData({ title: '', description: '', priority: 'medium', status: 'todo', assignee: '', project: '', dueDate: '', labels: '' });
+      setFiles([]);
       onClose();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create task');
@@ -121,6 +130,32 @@ const CreateTaskModal = ({ isOpen, onClose, users: propUsers }) => {
               <label className="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">Labels</label>
               <input name="labels" value={formData.labels} onChange={handleChange} className="w-full px-3 py-2 bg-background-base border border-border rounded-lg text-sm focus:outline-none focus:border-accent" placeholder="frontend, bug" />
             </div>
+          </div>
+
+          {/* File Attachments */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">Attachments</label>
+            <input type="file" ref={fileInputRef} className="hidden" multiple onChange={(e) => {
+              const newFiles = Array.from(e.target.files || []).filter(f => f.size <= 10 * 1024 * 1024);
+              setFiles(prev => [...prev, ...newFiles]);
+              e.target.value = '';
+            }} />
+            <button type="button" onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-3 py-2 bg-background-base border border-dashed border-border rounded-lg text-sm text-text-muted hover:text-accent hover:border-accent transition-colors w-full">
+              <Paperclip className="w-4 h-4" /> Click to attach files
+            </button>
+            {files.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs bg-background-base rounded-lg px-2 py-1.5">
+                    <FileText className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                    <span className="truncate flex-1 text-text-primary">{f.name}</span>
+                    <span className="text-text-muted flex-shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                    <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))} className="text-text-muted hover:text-danger transition-colors"><X className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="pt-4 flex justify-end gap-3 border-t border-border mt-6">

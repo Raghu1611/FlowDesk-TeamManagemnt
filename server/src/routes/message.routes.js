@@ -1,6 +1,7 @@
 const express = require('express');
 const { getMessages, getRooms, editMessage, deleteForMe, deleteForEveryone, toggleReaction, getChatUsers } = require('../controllers/message.controller');
 const { protect } = require('../middleware/auth.middleware');
+const upload = require('../middleware/upload.middleware');
 
 const router = express.Router();
 
@@ -31,6 +32,33 @@ router.get('/rooms', protect, getRooms);
  *         description: List of users with online/lastSeen info
  */
 router.get('/users', protect, getChatUsers);
+
+/**
+ * @swagger
+ * /messages/upload:
+ *   post:
+ *     summary: Upload a file for chat messages
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Uploaded file URL and name
+ */
+router.post('/upload', protect, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  const fileUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl, name: req.file.originalname });
+});
 
 /**
  * @swagger

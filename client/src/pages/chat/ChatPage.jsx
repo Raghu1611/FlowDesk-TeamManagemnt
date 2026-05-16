@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useContext, useCallback } from 'react';
-import { Send, Hash, Lock, Megaphone, FolderKanban, Smile, Pencil, Trash2, MoreVertical, X, Check, MessageCircle, Users, Circle, Clock } from 'lucide-react';
+import { Send, Hash, Lock, Megaphone, FolderKanban, Smile, Pencil, Trash2, MoreVertical, X, Check, MessageCircle, Users, Circle, Clock, Paperclip, FileText, Download, Image, Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { SocketContext } from '../../App';
-import { getMessagesAPI, getRoomsAPI, getChatUsersAPI } from '../../api/message.api';
+import { getMessagesAPI, getRoomsAPI, getChatUsersAPI, uploadChatFileAPI } from '../../api/message.api';
+import { resolveFileUrl, resolveDownloadUrl } from '../../api/axios';
 
 const channelIcons = {
   announcements: Megaphone,
@@ -29,8 +30,13 @@ const ChatPage = () => {
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [chatUsers, setChatUsers] = useState([]);
   const [showNewDm, setShowNewDm] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [filePreview, setFilePreview] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
   const typingTimeout = useRef(null);
+  const fileInputRef = useRef(null);
+  const activeRoomRef = useRef(activeRoom);
 
   // Helper: generate DM room id (same as backend, sorted)
   const getDmRoomId = (id1, id2) => {
@@ -88,8 +94,20 @@ const ChatPage = () => {
     };
   }, [socket]);
 
+  // Join all rooms for unread tracking
+  useEffect(() => {
+    if (!socket || rooms.length === 0) return;
+    const roomNames = rooms.map(r => r.name || r);
+    roomNames.forEach(name => socket.emit('join_room', name));
+    return () => {
+      roomNames.forEach(name => socket.emit('leave_room', name));
+    };
+  }, [socket, rooms]);
+
   // Load messages for active room
   useEffect(() => {
+    activeRoomRef.current = activeRoom;
+    setUnreadCounts(prev => ({ ...prev, [activeRoom]: 0 }));
     const loadMessages = async () => {
       setLoadingMsgs(true);
       try {
@@ -99,11 +117,6 @@ const ChatPage = () => {
       setLoadingMsgs(false);
     };
     loadMessages();
-
-    if (socket) {
-      socket.emit('join_room', activeRoom);
-      return () => { socket.emit('leave_room', activeRoom); };
-    }
   }, [activeRoom, socket]);
 
   // Socket listeners
@@ -111,7 +124,11 @@ const ChatPage = () => {
     if (!socket) return;
 
     const handleMessage = (data) => {
-      if (data.room === activeRoom) setMessages(prev => [...prev, data]);
+      if (data.room === activeRoomRef.current) {
+        setMessages(prev => [...prev, data]);
+      } else {
+        setUnreadCounts(prev => ({ ...prev, [data.room]: (prev[data.room] || 0) + 1 }));
+      }
     };
     const handleEdited = (data) => {
       if (data.room === activeRoom) setMessages(prev => prev.map(m => m._id === data._id ? { ...m, content: data.content, edited: true, editedAt: data.editedAt } : m));
@@ -161,9 +178,41 @@ const ChatPage = () => {
     socket.emit('send_message', { room: activeRoom, content: inputValue });
     socket.emit('typing_stop', { room: activeRoom });
     setInputValue('');
-    // Refresh rooms list after DM to update sidebar
     if (activeRoom.startsWith('dm:')) {
       setTimeout(() => getRoomsAPI().then(res => setRooms(res.data)).catch(() => {}), 500);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      e.target.value = '';
+      return alert('File size must be under 10 MB');
+    }
+    setFilePreview({ file, name: file.name, isImage: file.type.startsWith('image/') });
+    e.target.value = '';
+  };
+
+  const handleSendFile = async () => {
+    if (!filePreview || !socket) return;
+    try {
+      setUploadingFile(true);
+      const { url, name } = await uploadChatFileAPI(filePreview.file);
+      socket.emit('send_message', {
+        room: activeRoom,
+        content: filePreview.isImage ? '📷 Image' : `📎 ${name}`,
+        type: 'file',
+        attachment: { url, name }
+      });
+      setFilePreview(null);
+      if (activeRoom.startsWith('dm:')) {
+        setTimeout(() => getRoomsAPI().then(res => setRooms(res.data)).catch(() => {}), 500);
+      }
+    } catch {
+      alert('Failed to upload file');
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -260,7 +309,8 @@ const ChatPage = () => {
             return (
               <button key={name} onClick={() => switchRoom(name)}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${activeRoom === name ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-background-hover hover:text-text-primary'}`}>
-                <Icon className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{label}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" /><span className="truncate flex-1 text-left">{label}</span>
+                {unreadCounts[name] > 0 && <span className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-accent rounded-full px-1">{unreadCounts[name]}</span>}
               </button>
             );
           })}
@@ -276,6 +326,7 @@ const ChatPage = () => {
                     title={room.members?.map(m => m.name).join(', ')}>
                     <FolderKanban className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate flex-1 text-left">{label}</span>
+                    {unreadCounts[name] > 0 && <span className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-accent rounded-full px-1">{unreadCounts[name]}</span>}
                     {room.memberCount && <span className="text-[10px] bg-background-hover px-1.5 py-0.5 rounded-full">{room.memberCount}</span>}
                   </button>
                 );
@@ -299,7 +350,7 @@ const ChatPage = () => {
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-background-hover transition-colors">
                   <div className="relative">
                     <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent">
-                      {u.avatar ? <img src={u.avatar} alt="" className="w-6 h-6 rounded-full object-cover" /> : u.name.charAt(0).toUpperCase()}
+                      {u.avatar ? <img src={resolveFileUrl(u.avatar)} alt="" className="w-6 h-6 rounded-full object-cover" /> : u.name.charAt(0).toUpperCase()}
                     </div>
                     <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background-surface ${isUserOnline(u._id) ? 'bg-success' : 'bg-text-muted'}`} />
                   </div>
@@ -319,11 +370,12 @@ const ChatPage = () => {
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${activeRoom === name ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-background-hover hover:text-text-primary'}`}>
                 <div className="relative shrink-0">
                   <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent">
-                    {other?.avatar ? <img src={other.avatar} alt="" className="w-6 h-6 rounded-full object-cover" /> : (other?.name?.charAt(0) || '?').toUpperCase()}
+                    {other?.avatar ? <img src={resolveFileUrl(other.avatar)} alt="" className="w-6 h-6 rounded-full object-cover" /> : (other?.name?.charAt(0) || '?').toUpperCase()}
                   </div>
                   <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background-base ${online ? 'bg-success' : 'bg-text-muted'}`} />
                 </div>
                 <span className="truncate flex-1 text-left">{room.label}</span>
+                {unreadCounts[name] > 0 && <span className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-accent rounded-full px-1">{unreadCounts[name]}</span>}
                 {!online && other?.lastSeen && (
                   <span className="text-[9px] text-text-muted">{formatLastSeen(other.lastSeen)}</span>
                 )}
@@ -341,7 +393,7 @@ const ChatPage = () => {
             <>
               <div className="relative">
                 <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center text-xs font-bold text-accent">
-                  {activeDmUser?.avatar ? <img src={activeDmUser.avatar} alt="" className="w-7 h-7 rounded-full object-cover" /> : (activeDmUser?.name?.charAt(0) || '?').toUpperCase()}
+                  {activeDmUser?.avatar ? <img src={resolveFileUrl(activeDmUser.avatar)} alt="" className="w-7 h-7 rounded-full object-cover" /> : (activeDmUser?.name?.charAt(0) || '?').toUpperCase()}
                 </div>
                 <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background-surface ${activeDmUser && isUserOnline(activeDmUser._id) ? 'bg-success' : 'bg-text-muted'}`} />
               </div>
@@ -444,7 +496,23 @@ const ChatPage = () => {
                     ) : (
                       <div className="relative">
                         <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${own ? 'bg-accent text-white rounded-br-sm' : 'bg-background-hover text-text-primary rounded-bl-sm'}`}>
-                          {msg.content}
+                          {msg.type === 'file' && msg.attachment?.url ? (
+                            msg.attachment.url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || msg.attachment.name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) ? (
+                              <div className="space-y-1">
+                                <img src={resolveFileUrl(msg.attachment.url)} alt={msg.attachment.name} className="max-w-[280px] max-h-[200px] rounded-lg object-cover cursor-pointer" onClick={() => window.open(resolveFileUrl(msg.attachment.url), '_blank')} />
+                                <p className="text-xs opacity-70">{msg.attachment.name}</p>
+                              </div>
+                            ) : (
+                              <a href={resolveDownloadUrl(msg.attachment.url)} download={msg.attachment.name} target="_blank" rel="noopener noreferrer"
+                                className={`flex items-center gap-2 ${own ? 'text-white/90 hover:text-white' : 'text-accent hover:underline'}`}>
+                                <FileText className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate max-w-[200px]">{msg.attachment.name}</span>
+                                <Download className="w-3.5 h-3.5 flex-shrink-0" />
+                              </a>
+                            )
+                          ) : (
+                            msg.content
+                          )}
                         </div>
                         {/* Hover actions */}
                         <div className={`absolute -top-3 ${own ? 'left-0' : 'right-0'} hidden group-hover:flex items-center gap-0.5 bg-background-surface border border-border rounded-lg shadow-card px-1 py-0.5`}
@@ -534,10 +602,28 @@ const ChatPage = () => {
         </div>
 
         <div className="p-3 sm:p-4 bg-background-base border-t border-border">
-          <form onSubmit={handleSendMessage} className="relative flex items-center">
+          {/* File preview */}
+          {filePreview && (
+            <div className="mb-2 flex items-center gap-3 bg-background-surface border border-border rounded-xl px-3 py-2">
+              {filePreview.isImage ? <Image className="w-5 h-5 text-accent flex-shrink-0" /> : <FileText className="w-5 h-5 text-accent flex-shrink-0" />}
+              <span className="text-sm text-text-primary truncate flex-1">{filePreview.name}</span>
+              <button onClick={() => setFilePreview(null)} className="p-1 text-text-muted hover:text-danger transition-colors"><X className="w-4 h-4" /></button>
+              <button onClick={handleSendFile} disabled={uploadingFile}
+                className="px-3 py-1 text-xs font-semibold text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5">
+                {uploadingFile ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                {uploadingFile ? 'Uploading...' : 'Send'}
+              </button>
+            </div>
+          )}
+          <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar,.csv" />
+          <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
+            <button type="button" onClick={() => fileInputRef.current?.click()}
+              className="p-2.5 text-text-muted hover:text-accent hover:bg-background-hover rounded-xl transition-colors" title="Attach file">
+              <Paperclip className="w-5 h-5" />
+            </button>
             <input type="text" value={inputValue} onChange={handleInputChange}
               placeholder={activeRoom.startsWith('dm:') ? `Message ${activeLabel}...` : `Message #${activeLabel}...`}
-              className="w-full bg-background-surface border border-border rounded-xl pl-4 pr-12 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all text-sm" />
+              className="flex-1 bg-background-surface border border-border rounded-xl pl-4 pr-12 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all text-sm" />
             <button type="submit" disabled={!inputValue.trim()}
               className="absolute right-2 p-2 bg-accent text-white rounded-lg hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
               <Send className="w-4 h-4" />

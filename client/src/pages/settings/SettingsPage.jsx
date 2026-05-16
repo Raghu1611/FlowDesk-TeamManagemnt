@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { User, Mail, Phone, Building2, FileText, Lock, Eye, EyeOff, Camera, Shield, Save, Loader2 } from 'lucide-react';
 import { updateProfileAPI, changePasswordAPI, uploadAvatarAPI } from '../../api/user.api';
+import { resolveFileUrl } from '../../api/axios';
 import { updateUser } from '../../features/auth/authSlice';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -73,7 +74,7 @@ const SettingsPage = () => {
     } finally { setUploadingAvatar(false); }
   };
 
-  const avatarUrl = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`;
+  const avatarUrl = user?.avatar ? resolveFileUrl(user.avatar) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`;
 
   const tabs = [
     { id: 'profile', label: 'Profile' },

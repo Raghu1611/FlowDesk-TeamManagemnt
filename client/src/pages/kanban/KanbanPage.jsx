@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Plus, MessageSquare, Paperclip, Calendar } from 'lucide-react';
+import { Plus, MessageSquare, Paperclip, Calendar, Search, Filter } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTasks } from '../../features/tasks/tasksSlice';
 import { updateTaskAPI } from '../../api/task.api';
@@ -24,6 +24,8 @@ const KanbanPage = () => {
   const dispatch = useDispatch();
   const { tasks, loading } = useSelector(state => state.tasks);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [kanbanSearch, setKanbanSearch] = useState('');
+  const [kanbanPriority, setKanbanPriority] = useState('');
   const columnOrder = ['backlog', 'todo', 'in_progress', 'in_review', 'done'];
   
   const [columns, setColumns] = useState(() => {
@@ -82,14 +84,33 @@ const KanbanPage = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden animate-fadeIn">
-      <div className="mb-5 flex justify-between items-center shrink-0">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary">Kanban Board</h1>
-          <p className="text-text-secondary text-sm mt-1">{tasks.length} tasks across {columnOrder.length} columns</p>
+      <div className="mb-5 flex flex-col gap-4 shrink-0">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-text-primary">Kanban Board</h1>
+            <p className="text-text-secondary text-sm mt-1">{tasks.length} tasks across {columnOrder.length} columns</p>
+          </div>
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+            <Plus className="w-4 h-4" /> Add Task
+          </button>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-          <Plus className="w-4 h-4" /> Add Task
-        </button>
+
+        <div className="flex flex-wrap items-center gap-3 bg-background-surface border border-border rounded-2xl px-4 py-3 shadow-card">
+          <div className="relative flex-1 min-w-[200px] max-w-sm group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted group-focus-within:text-accent transition-colors duration-200">
+              <Search className="w-4 h-4" />
+            </div>
+            <input type="text" placeholder="Filter tasks..." value={kanbanSearch} onChange={e => setKanbanSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-background-base border border-border rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50 focus:shadow-[0_0_0_4px_rgba(0,122,255,0.06)] hover:border-border/80 transition-all duration-200" />
+          </div>
+          <div className="flex items-center gap-1.5 bg-background-base border border-border rounded-xl px-3 py-1 hover:border-border/80 transition-colors">
+            <Filter className="w-3.5 h-3.5 text-text-muted shrink-0" />
+            <select value={kanbanPriority} onChange={e => setKanbanPriority(e.target.value)} className="py-1.5 bg-transparent text-sm text-text-primary focus:outline-none cursor-pointer font-medium min-w-[90px]">
+              <option value="">All Priority</option>
+              <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <CreateTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
@@ -98,7 +119,12 @@ const KanbanPage = () => {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex gap-3 h-full items-start min-w-max">
             {columnOrder.map(colId => {
-              const colTasks = (columns[colId] || []).map(id => tasks.find(t => t._id === id)).filter(Boolean);
+              const colTasks = (columns[colId] || []).map(id => tasks.find(t => t._id === id)).filter(Boolean)
+                .filter(t => {
+                  if (kanbanSearch && !t.title?.toLowerCase().includes(kanbanSearch.toLowerCase())) return false;
+                  if (kanbanPriority && t.priority !== kanbanPriority) return false;
+                  return true;
+                });
               const meta = columnMeta[colId];
 
               return (

@@ -188,7 +188,7 @@ This creates sample users, projects, and tasks so you can explore the app right 
 
 - Frontend runs at http://localhost:5173
 - Swagger API docs are at http://localhost:5000/api-docs
-- Health check endpoint is at http://localhost:5000/api/health
+
 
 ---
 
@@ -196,15 +196,7 @@ This creates sample users, projects, and tasks so you can explore the app right 
 
 Run node seed.js inside the server folder to create the sample data, then log in with any of these accounts:
 
-Admin - admin@flowdesk.com / Admin@123
 
-Manager - manager@flowdesk.com / Manager@123
-
-Employee - john@flowdesk.com / Employee@123
-
-Employee - emily@flowdesk.com / Employee@123
-
-Employee - mike@flowdesk.com / Employee@123
 
 The seed script also creates 3 sample projects and 12 tasks with different statuses and priorities.
 
@@ -241,7 +233,6 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 PORT is the server port, defaults to 5000. MONGODB_URI is your MongoDB connection string from Atlas or local. JWT_SECRET is a secret key used to sign tokens. JWT_EXPIRES_IN controls how long tokens last, like 7d for seven days. CLIENT_URL is the frontend URL needed for CORS. The three Cloudinary variables are for file and avatar uploads.
 
-Never commit the .env file. The gitignore is already configured to exclude it.
 
 ---
 

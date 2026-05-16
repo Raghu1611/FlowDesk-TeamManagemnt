@@ -55,9 +55,10 @@ const uploadAvatar = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
+    const avatarUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { avatar: req.file.path },
+      { avatar: avatarUrl },
       { new: true }
     ).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });

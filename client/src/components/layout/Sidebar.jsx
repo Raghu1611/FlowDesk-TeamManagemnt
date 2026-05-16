@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, FolderKanban, CheckSquare, MessageSquare, BarChart3, Users, Settings, X, Columns3 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { resolveFileUrl } from '../../api/axios';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const navItems = [
@@ -37,7 +38,7 @@ const Sidebar = ({ onClose }) => {
       <div className="px-4 py-4 border-b border-border">
         <div className="flex items-center gap-3 p-2 rounded-xl bg-background-base/50">
           <div className="w-9 h-9 rounded-lg bg-accent/10 shrink-0 overflow-hidden ring-1 ring-border">
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Felix'}`} alt="Avatar" className="w-full h-full object-cover" />
+            <img src={user?.avatar ? resolveFileUrl(user.avatar) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Felix'}`} alt="Avatar" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-semibold text-text-primary truncate leading-tight">{user?.name || 'Guest'}</span>

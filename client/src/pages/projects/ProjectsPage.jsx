@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProjects } from '../../features/projects/projectsSlice';
 import { createProjectAPI, updateProjectAPI, deleteProjectAPI } from '../../api/project.api';
 import { getUsersAPI } from '../../api/user.api';
-import { Plus, MoreHorizontal, Calendar, Users, X, Loader2, Trash2, Edit3, FolderKanban, AlertTriangle, Clock, ArrowUpRight } from 'lucide-react';
+import { Plus, MoreHorizontal, Calendar, Users, X, Loader2, Trash2, Edit3, FolderKanban, AlertTriangle, Clock, ArrowUpRight, Search, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -28,6 +28,7 @@ const ProjectsPage = () => {
   const [menuOpen, setMenuOpen] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [filters, setFilters] = useState({ search: '', status: '' });
 
   const canManage = user?.role === 'admin' || user?.role === 'manager';
 
@@ -42,6 +43,12 @@ const ProjectsPage = () => {
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
   }, []);
+
+  const filteredProjects = projects.filter(p => {
+    if (filters.search && !p.title?.toLowerCase().includes(filters.search.toLowerCase()) && !p.description?.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    if (filters.status && p.status !== filters.status) return false;
+    return true;
+  });
 
   const openCreateModal = () => {
     setEditProject(null);
@@ -107,11 +114,39 @@ const ProjectsPage = () => {
           <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-2.5">
             <FolderKanban className="w-6 h-6 text-accent" /> Projects
           </h1>
-          <p className="text-text-secondary text-sm mt-1">{projects.length} project{projects.length !== 1 ? 's' : ''} — Manage and track all team projects.</p>
+          <p className="text-text-secondary text-sm mt-1">{filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} — Manage and track all team projects.</p>
         </div>
         {canManage && (
           <button onClick={openCreateModal} className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md">
             <Plus className="w-4 h-4" /> New Project
+          </button>
+        )}
+      </div>
+
+      {/* Search & Filter Bar */}
+      <div className="flex flex-wrap items-center gap-3 bg-background-surface border border-border rounded-2xl px-4 py-3 shadow-card">
+        <div className="relative flex-1 min-w-[200px] max-w-sm group">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-muted group-focus-within:text-accent transition-colors duration-200">
+            <Search className="w-4 h-4" />
+          </div>
+          <input
+            type="text" placeholder="Search projects..."
+            value={filters.search} onChange={e => setFilters({ ...filters, search: e.target.value })}
+            className="w-full pl-10 pr-4 py-2.5 bg-background-base border border-border rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50 focus:shadow-[0_0_0_4px_rgba(0,122,255,0.06)] hover:border-border/80 transition-all duration-200"
+          />
+        </div>
+        <div className="flex items-center gap-1.5 bg-background-base border border-border rounded-xl px-3 py-1 hover:border-border/80 transition-colors">
+          <SlidersHorizontal className="w-3.5 h-3.5 text-text-muted shrink-0" />
+          <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} className="py-1.5 bg-transparent text-sm text-text-primary focus:outline-none cursor-pointer font-medium min-w-[90px]">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        {(filters.search || filters.status) && (
+          <button onClick={() => setFilters({ search: '', status: '' })} className="text-xs text-accent hover:text-accent-hover font-semibold flex items-center gap-1 transition-colors">
+            <X className="w-3.5 h-3.5" /> Clear
           </button>
         )}
       </div>
@@ -121,11 +156,11 @@ const ProjectsPage = () => {
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-accent" />
           <p className="text-sm">Loading projects...</p>
         </div>
-      ) : projects.length === 0 ? (
+      ) : filteredProjects.length === 0 ? (
         <div className="bg-background-surface border border-border rounded-2xl p-16 text-center">
           <FolderKanban className="w-12 h-12 mx-auto mb-4 text-text-muted opacity-30" />
-          <p className="text-text-muted mb-4">No projects yet. Create your first project to get started!</p>
-          {canManage && (
+          <p className="text-text-muted mb-4">{projects.length === 0 ? 'No projects yet. Create your first project to get started!' : 'No projects match your search.'}</p>
+          {canManage && projects.length === 0 && (
             <button onClick={openCreateModal} className="bg-accent text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-accent-hover transition-colors">
               Create Project
             </button>
@@ -134,7 +169,7 @@ const ProjectsPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <AnimatePresence>
-            {projects.map(project => (
+            {filteredProjects.map(project => (
               <motion.div
                 key={project._id}
                 initial={{ opacity: 0, y: 12 }}

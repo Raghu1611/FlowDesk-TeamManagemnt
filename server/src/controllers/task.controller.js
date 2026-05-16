@@ -205,8 +205,9 @@ const addAttachment = async (req, res) => {
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
+    const fileUrl = req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`;
     task.attachments.push({
-      url: req.file.path, name: req.file.originalname,
+      url: fileUrl, name: req.file.originalname,
       size: req.file.size, type: req.file.mimetype
     });
     await task.save();

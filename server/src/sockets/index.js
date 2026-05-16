@@ -86,7 +86,8 @@ module.exports = (io) => {
             room: data.room,
             sender: socket.user._id,
             content: data.content,
-            type: data.type || 'text'
+            type: data.type || 'text',
+            ...(data.attachment && { attachment: { url: data.attachment.url, name: data.attachment.name } })
           });
           await message.populate('sender', 'name email role avatar');
           
@@ -96,6 +97,7 @@ module.exports = (io) => {
             sender: message.sender,
             content: message.content,
             type: message.type,
+            attachment: message.attachment || null,
             reactions: [],
             edited: false,
             createdAt: message.createdAt
