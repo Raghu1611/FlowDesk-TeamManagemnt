@@ -35,41 +35,41 @@
 
 @layer base {
   :root {
-    --bg-base: #f8f9fc;
-    --bg-surface: #ffffff;
-    --bg-elevated: #f1f3f9;
-    --bg-hover: #ebedf5;
-    --border: #e3e5ef;
-    --border-subtle: #eff0f6;
-    --text-primary: #0c0f1d;
-    --text-secondary: #4b5271;
-    --text-muted: #9197b3;
-    --accent: #635bff;
-    --accent-hover: #5046e5;
-    --accent-soft: rgba(99, 91, 255, 0.08);
-    --success: #0ea371;
-    --warning: #f5a623;
-    --danger: #ef4444;
-    --info: #0ea5e9;
+    --bg-base: #F2F2F7;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #E8E8ED;
+    --bg-hover: #D1D1D6;
+    --border: #C7C7CC;
+    --border-subtle: #E5E5EA;
+    --text-primary: #000000;
+    --text-secondary: #3C3C43;
+    --text-muted: #8E8E93;
+    --accent: #007AFF;
+    --accent-hover: #0056CC;
+    --accent-soft: rgba(0, 122, 255, 0.1);
+    --success: #34C759;
+    --warning: #FF9500;
+    --danger: #FF3B30;
+    --info: #5AC8FA;
   }
 
   .dark {
-    --bg-base: #0a0a0c;
-    --bg-surface: #121215;
-    --bg-elevated: #1a1a1f;
-    --bg-hover: #222228;
-    --border: #2a2a30;
-    --border-subtle: #1e1e24;
-    --text-primary: #f0f0f2;
-    --text-secondary: #9898a4;
-    --text-muted: #56565f;
-    --accent: #7c7aff;
-    --accent-hover: #6b69e8;
-    --accent-soft: rgba(124, 122, 255, 0.1);
-    --success: #34d399;
-    --warning: #fbbf24;
-    --danger: #f87171;
-    --info: #38bdf8;
+    --bg-base: #000000;
+    --bg-surface: #1C1C1E;
+    --bg-elevated: #2C2C2E;
+    --bg-hover: #3A3A3C;
+    --border: #38383A;
+    --border-subtle: #2C2C2E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #ABABAF;
+    --text-muted: #636366;
+    --accent: #0A84FF;
+    --accent-hover: #409CFF;
+    --accent-soft: rgba(10, 132, 255, 0.15);
+    --success: #30D158;
+    --warning: #FFD60A;
+    --danger: #FF453A;
+    --info: #64D2FF;
   }
 
   body {
@@ -143,7 +143,7 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
   .dark .glass {
-    background: rgba(18,18,21,0.75);
+    background: rgba(28,28,30,0.8);
     backdrop-filter: blur(24px) saturate(150%);
     -webkit-backdrop-filter: blur(24px) saturate(150%);
   }

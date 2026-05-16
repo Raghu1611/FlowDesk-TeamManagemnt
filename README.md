@@ -15,6 +15,8 @@ A production-ready, full-stack **MERN** collaborative task management platform w
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [Test Credentials](#test-credentials)
+- [Deployment](#deployment)
 - [Environment Variables](#environment-variables)
 - [API Documentation](#api-documentation)
 - [Role-Based Access](#role-based-access)
@@ -230,6 +232,45 @@ This creates sample users, projects, and tasks for testing.
 - **Frontend**: http://localhost:5173
 - **Swagger API Docs**: http://localhost:5000/api-docs
 - **Health Check**: http://localhost:5000/api/health
+
+---
+
+## Test Credentials
+
+Run `node seed.js` inside the `server/` folder to create sample data, then log in with:
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@flowdesk.com` | `Admin@123` |
+| **Manager** | `manager@flowdesk.com` | `Manager@123` |
+| **Employee** | `john@flowdesk.com` | `Employee@123` |
+| **Employee** | `emily@flowdesk.com` | `Employee@123` |
+| **Employee** | `mike@flowdesk.com` | `Employee@123` |
+
+> The seed script also creates 3 sample projects and 12 tasks so you can explore the full application immediately.
+
+---
+
+## Deployment
+
+### Deploy Backend (Render / Railway)
+
+1. Push the repo to GitHub.
+2. Create a new **Web Service** on [Render](https://render.com) or [Railway](https://railway.app).
+3. Set the **Root Directory** to `server`.
+4. Set **Build Command**: `npm install`
+5. Set **Start Command**: `node server.js`
+6. Add all [Environment Variables](#environment-variables) in the dashboard.
+
+### Deploy Frontend (Vercel)
+
+1. Import the repo on [Vercel](https://vercel.com).
+2. Set the **Root Directory** to `client`.
+3. Framework Preset: **Vite**.
+4. Add an environment variable `VITE_API_URL` pointing to your deployed backend URL.
+5. Deploy.
+
+> After deploying both, update `CLIENT_URL` in the backend env to match the Vercel URL.
 
 ---
 

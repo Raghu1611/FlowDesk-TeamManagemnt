@@ -16,9 +16,9 @@ const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const TaskCompletionChart = ({ data }) => {
   const { theme } = useTheme();
   
-  const textColor = theme === 'dark' ? '#a1a1aa' : '#4b5271';
-  const gridColor = theme === 'dark' ? '#27272a' : '#e3e5ef';
-  const accentColor = theme === 'dark' ? '#818cf8' : '#635bff';
+  const textColor = theme === 'dark' ? '#ABABAF' : '#3C3C43';
+  const gridColor = theme === 'dark' ? '#38383A' : '#C7C7CC';
+  const accentColor = theme === 'dark' ? '#0A84FF' : '#007AFF';
 
   const chartData = data?.length > 0
     ? data.map(d => ({

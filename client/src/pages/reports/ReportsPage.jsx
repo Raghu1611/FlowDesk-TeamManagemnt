@@ -21,8 +21,8 @@ const ReportsPage = () => {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
-  const textColor = theme === 'dark' ? '#a1a1aa' : '#4b5271';
-  const gridColor = theme === 'dark' ? '#27272a' : '#e3e5ef';
+  const textColor = theme === 'dark' ? '#ABABAF' : '#3C3C43';
+  const gridColor = theme === 'dark' ? '#38383A' : '#C7C7CC';
 
   useEffect(() => {
     const load = async () => {
@@ -48,7 +48,7 @@ const ReportsPage = () => {
     name: name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()), value
   })) : [];
 
-  const COLORS = ['#818cf8', '#34d399', '#fbbf24', '#f87171', '#38bdf8'];
+  const COLORS = ['#0A84FF', '#30D158', '#FF9500', '#FF453A', '#5AC8FA'];
   const completionRate = stats?.totalTasks > 0 ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0;
 
   return (
