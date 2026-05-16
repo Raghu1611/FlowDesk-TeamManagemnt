@@ -30,13 +30,16 @@ export const resolveFileUrl = (url) => {
 
 export const resolveDownloadUrl = (url) => {
   if (!url) return '';
-  if (url.startsWith('http')) {
-    // Fix Cloudinary PDFs stored as /image/upload/ — they need /raw/upload/
-    if (url.includes('res.cloudinary.com') && url.match(/\.(pdf|doc|docx|xls|xlsx|zip|rar|txt|csv)$/i)) {
-      return url.replace('/image/upload/', '/raw/upload/');
+  if (url.startsWith('http') && url.includes('res.cloudinary.com')) {
+    // For Cloudinary: fix resource_type and add fl_attachment to force download
+    let fixed = url;
+    if (url.match(/\.(pdf|doc|docx|xls|xlsx|zip|rar|txt|csv)$/i)) {
+      fixed = fixed.replace('/image/upload/', '/raw/upload/');
     }
-    return url;
+    // Insert fl_attachment after /upload/ to force browser download
+    return fixed.replace('/upload/', '/upload/fl_attachment/');
   }
+  if (url.startsWith('http')) return url;
   const filename = url.split('/').pop();
   return `${SERVER_URL}/download/${filename}`;
 };
