@@ -47,6 +47,9 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Health check
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'FlowDesk API is running', version: '1.0.0' });
+});
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'FlowDesk API is running', timestamp: new Date().toISOString() });
 });
