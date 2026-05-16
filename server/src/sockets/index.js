@@ -76,7 +76,7 @@ module.exports = (io) => {
             content: data.content,
             type: data.type || 'text'
           });
-          await message.populate('sender', 'name email');
+          await message.populate('sender', 'name email role');
           
           io.to(data.room).emit('receive_message', {
             _id: message._id,
@@ -84,16 +84,89 @@ module.exports = (io) => {
             sender: message.sender,
             content: message.content,
             type: message.type,
+            reactions: [],
+            edited: false,
             createdAt: message.createdAt
           });
-        } else {
-          // Fallback for unauthenticated
-          io.to(data.room).emit('receive_message', data);
         }
       } catch (err) {
         console.error('Error saving message:', err.message);
-        io.to(data.room).emit('receive_message', data);
       }
+    });
+
+    // Edit message (real-time)
+    socket.on('edit_message', async (data) => {
+      try {
+        if (!socket.user) return;
+        const message = await Message.findById(data.messageId);
+        if (!message || message.sender.toString() !== socket.user._id.toString()) return;
+        const twoMin = 2 * 60 * 1000;
+        if (Date.now() - new Date(message.createdAt).getTime() > twoMin) return;
+        message.content = data.content;
+        message.edited = true;
+        message.editedAt = new Date();
+        await message.save();
+        await message.populate('sender', 'name email role');
+        await message.populate('reactions.user', 'name');
+        io.to(message.room).emit('message:edited', {
+          _id: message._id, room: message.room, content: message.content,
+          sender: message.sender, edited: true, editedAt: message.editedAt,
+          reactions: message.reactions, createdAt: message.createdAt
+        });
+      } catch (err) { console.error('Edit error:', err.message); }
+    });
+
+    // Delete for me (only emits back to the sender)
+    socket.on('delete_for_me', async (data) => {
+      try {
+        if (!socket.user) return;
+        const message = await Message.findById(data.messageId);
+        if (!message) return;
+        message.deletedFor.addToSet(socket.user._id);
+        await message.save();
+        socket.emit('message:deleted_for_me', { _id: message._id, room: message.room });
+      } catch (err) { console.error('Delete for me error:', err.message); }
+    });
+
+    // Delete for everyone (admin or sender)
+    socket.on('delete_for_everyone', async (data) => {
+      try {
+        if (!socket.user) return;
+        const message = await Message.findById(data.messageId);
+        if (!message) return;
+        const isAdmin = socket.user.role === 'admin';
+        const isOwner = message.sender.toString() === socket.user._id.toString();
+        if (!isAdmin && !isOwner) return;
+        message.deletedForEveryone = true;
+        message.content = 'This message was deleted';
+        await message.save();
+        io.to(message.room).emit('message:deleted_for_everyone', { _id: message._id, room: message.room });
+      } catch (err) { console.error('Delete for everyone error:', err.message); }
+    });
+
+    // Toggle reaction (real-time)
+    socket.on('toggle_reaction', async (data) => {
+      try {
+        if (!socket.user) return;
+        const message = await Message.findById(data.messageId);
+        if (!message) return;
+        const userId = socket.user._id;
+        const existingIdx = message.reactions.findIndex(
+          r => r.emoji === data.emoji && r.user.toString() === userId.toString()
+        );
+        if (existingIdx > -1) {
+          message.reactions.splice(existingIdx, 1);
+        } else {
+          message.reactions.push({ emoji: data.emoji, user: userId });
+        }
+        await message.save();
+        await message.populate('reactions.user', 'name');
+        await message.populate('sender', 'name email role');
+        io.to(message.room).emit('message:reaction_updated', {
+          _id: message._id, room: message.room,
+          reactions: message.reactions
+        });
+      } catch (err) { console.error('Reaction error:', err.message); }
     });
 
     socket.on('typing_start', (data) => {

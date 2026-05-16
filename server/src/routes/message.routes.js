@@ -1,5 +1,5 @@
 const express = require('express');
-const { getMessages, getRooms } = require('../controllers/message.controller');
+const { getMessages, getRooms, editMessage, deleteForMe, deleteForEveryone, toggleReaction } = require('../controllers/message.controller');
 const { protect } = require('../middleware/auth.middleware');
 
 const router = express.Router();
@@ -17,6 +17,50 @@ const router = express.Router();
  *         description: List of rooms
  */
 router.get('/rooms', protect, getRooms);
+
+/**
+ * @swagger
+ * /messages/{id}/edit:
+ *   patch:
+ *     summary: Edit a message (within 2 minutes)
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/:id/edit', protect, editMessage);
+
+/**
+ * @swagger
+ * /messages/{id}/delete-for-me:
+ *   patch:
+ *     summary: Delete message for current user
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/:id/delete-for-me', protect, deleteForMe);
+
+/**
+ * @swagger
+ * /messages/{id}/delete-for-everyone:
+ *   delete:
+ *     summary: Delete message for everyone (admin or sender)
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.delete('/:id/delete-for-everyone', protect, deleteForEveryone);
+
+/**
+ * @swagger
+ * /messages/{id}/react:
+ *   post:
+ *     summary: Toggle reaction on a message
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:id/react', protect, toggleReaction);
 
 /**
  * @swagger

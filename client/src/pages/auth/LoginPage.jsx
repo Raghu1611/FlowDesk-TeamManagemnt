@@ -2,11 +2,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, ArrowRight, Mail, Lock } from 'lucide-react';
+import { Loader2, ArrowRight, Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '../../features/auth/authSlice';
 import toast from 'react-hot-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -17,7 +17,8 @@ const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, isAuthenticated } = useSelector(state => state.auth);
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
   });
@@ -32,8 +33,14 @@ const LoginPage = () => {
   return (
     <div className="w-full">
       <div className="mb-8">
-        <h2 className="text-xl font-display font-bold text-text-primary">Welcome back</h2>
-        <p className="text-sm text-text-secondary mt-1">Sign in to continue to your workspace</p>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-accent" />
+          </div>
+          <span className="text-[11px] font-semibold text-accent uppercase tracking-wider">Secure Login</span>
+        </div>
+        <h2 className="text-2xl font-display font-bold text-text-primary leading-tight">Welcome back</h2>
+        <p className="text-sm text-text-secondary mt-1.5">Sign in to continue to your workspace</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -46,7 +53,7 @@ const LoginPage = () => {
             <input
               {...register('email')}
               type="email"
-              className="w-full pl-10 pr-4 py-2.5 bg-background-base border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all placeholder:text-text-muted"
+              className="w-full pl-10 pr-4 py-3 bg-background-base border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all placeholder:text-text-muted"
               placeholder="name@company.com"
             />
           </div>
@@ -64,10 +71,14 @@ const LoginPage = () => {
             </div>
             <input
               {...register('password')}
-              type="password"
-              className="w-full pl-10 pr-4 py-2.5 bg-background-base border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all placeholder:text-text-muted"
+              type={showPassword ? 'text' : 'password'}
+              className="w-full pl-10 pr-11 py-3 bg-background-base border border-border rounded-xl text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all placeholder:text-text-muted"
               placeholder="Enter your password"
             />
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-text-muted hover:text-text-secondary transition-colors">
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
           {errors.password && <p className="text-danger text-xs mt-1.5 font-medium">{errors.password.message}</p>}
         </div>
@@ -75,20 +86,23 @@ const LoginPage = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:ring-offset-background-base disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] mt-2 group"
+          className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:ring-offset-background-base disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_2px_8px_rgba(0,122,255,0.25)] hover:shadow-[0_4px_16px_rgba(0,122,255,0.3)] mt-2 group"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Sign in <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>}
         </button>
       </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-sm text-text-secondary">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-semibold text-accent hover:text-accent-hover transition-colors">
-            Create one
-          </Link>
-        </p>
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-6">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[11px] text-text-muted font-medium uppercase tracking-wider">New here?</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
+
+      <Link to="/register"
+        className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-accent bg-accent/5 border border-accent/20 hover:bg-accent/10 hover:border-accent/30 transition-all">
+        Create an account <ArrowRight className="w-4 h-4" />
+      </Link>
     </div>
   );
 };
