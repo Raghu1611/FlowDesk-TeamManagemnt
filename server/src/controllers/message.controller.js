@@ -1,5 +1,6 @@
 const Message = require('../models/Message.model');
 const Project = require('../models/Project.model');
+const User = require('../models/User.model');
 
 // Channel definitions with role access
 const CHANNELS = [
@@ -11,6 +12,12 @@ const CHANNELS = [
   { name: 'leadership', label: 'Leadership', roles: ['admin'] },
 ];
 
+// Helper: generate a deterministic DM room id (sorted so both users get same room)
+const getDmRoomId = (userId1, userId2) => {
+  const sorted = [userId1.toString(), userId2.toString()].sort();
+  return `dm:${sorted[0]}_${sorted[1]}`;
+};
+
 const getMessages = async (req, res) => {
   try {
     const { room } = req.params;
@@ -20,6 +27,14 @@ const getMessages = async (req, res) => {
     const channel = CHANNELS.find(c => c.name === room);
     if (channel && !channel.roles.includes(req.user.role)) {
       return res.status(403).json({ success: false, message: 'Not authorized to access this channel' });
+    }
+
+    // Check DM room access
+    if (room.startsWith('dm:')) {
+      const ids = room.replace('dm:', '').split('_');
+      if (!ids.includes(userId.toString())) {
+        return res.status(403).json({ success: false, message: 'Not authorized to access this conversation' });
+      }
     }
 
     // Check project channel access
@@ -77,7 +92,43 @@ const getRooms = async (req, res) => {
       ]
     }));
 
-    res.json({ success: true, data: [...accessibleChannels, ...projectChannels] });
+    // Get DM conversations the user is part of (rooms that have messages)
+    const dmRooms = await Message.aggregate([
+      { $match: { room: { $regex: /^dm:/ }, deletedForEveryone: { $ne: true } } },
+      { $group: { _id: '$room', lastMessage: { $last: '$content' }, lastAt: { $last: '$createdAt' } } },
+      { $sort: { lastAt: -1 } }
+    ]);
+
+    // Filter to only DMs where current user is a participant
+    const userIdStr = userId.toString();
+    const userDmRooms = [];
+    for (const dm of dmRooms) {
+      const ids = dm._id.replace('dm:', '').split('_');
+      if (ids.includes(userIdStr)) {
+        const otherUserId = ids[0] === userIdStr ? ids[1] : ids[0];
+        const otherUser = await User.findById(otherUserId).select('name email avatar role isActive lastSeen');
+        if (otherUser) {
+          userDmRooms.push({
+            name: dm._id,
+            label: otherUser.name,
+            type: 'dm',
+            otherUser: {
+              _id: otherUser._id,
+              name: otherUser.name,
+              email: otherUser.email,
+              avatar: otherUser.avatar,
+              role: otherUser.role,
+              isActive: otherUser.isActive,
+              lastSeen: otherUser.lastSeen
+            },
+            lastMessage: dm.lastMessage,
+            lastAt: dm.lastAt
+          });
+        }
+      }
+    }
+
+    res.json({ success: true, data: [...accessibleChannels, ...projectChannels, ...userDmRooms] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -174,4 +225,16 @@ const toggleReaction = async (req, res) => {
   }
 };
 
-module.exports = { getMessages, getRooms, editMessage, deleteForMe, deleteForEveryone, toggleReaction };
+// Get all users with online status for DM list
+const getChatUsers = async (req, res) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.user._id } })
+      .select('name email avatar role isActive lastSeen')
+      .sort({ isActive: -1, name: 1 });
+    res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { getMessages, getRooms, editMessage, deleteForMe, deleteForEveryone, toggleReaction, getChatUsers, getDmRoomId };

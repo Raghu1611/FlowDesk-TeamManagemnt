@@ -10,6 +10,11 @@ export const getRoomsAPI = async () => {
   return response.data;
 };
 
+export const getChatUsersAPI = async () => {
+  const response = await api.get('/messages/users');
+  return response.data;
+};
+
 export const editMessageAPI = async (id, content) => {
   const response = await api.patch(`/messages/${id}/edit`, { content });
   return response.data;

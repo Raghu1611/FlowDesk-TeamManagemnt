@@ -1,5 +1,5 @@
 const express = require('express');
-const { getMessages, getRooms, editMessage, deleteForMe, deleteForEveryone, toggleReaction } = require('../controllers/message.controller');
+const { getMessages, getRooms, editMessage, deleteForMe, deleteForEveryone, toggleReaction, getChatUsers } = require('../controllers/message.controller');
 const { protect } = require('../middleware/auth.middleware');
 
 const router = express.Router();
@@ -17,6 +17,20 @@ const router = express.Router();
  *         description: List of rooms
  */
 router.get('/rooms', protect, getRooms);
+
+/**
+ * @swagger
+ * /messages/users:
+ *   get:
+ *     summary: Get all users for DM with online status
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users with online/lastSeen info
+ */
+router.get('/users', protect, getChatUsers);
 
 /**
  * @swagger

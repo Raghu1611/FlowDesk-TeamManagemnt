@@ -370,7 +370,8 @@ http://localhost:5000/api-docs
 | `typing_stop` | Bidirectional | User stopped typing |
 | `task:created` | Server → Client | New task created |
 | `task:updated` | Server → Client | Task was updated |
-| `task:deleted` | Server → Client | Task was deleted |
+| `task:deleted` | Server → Cli
+ent | Task was deleted |
 | `notification:new` | Server → Client | New notification |
 | `users:online` | Server → Client | Online users list |
 

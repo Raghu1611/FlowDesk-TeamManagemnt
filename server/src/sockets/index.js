@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User.model');
 const Message = require('../models/Message.model');
 
-const onlineUsers = new Map(); // socketId -> { userId, name, email }
+const onlineUsers = new Map(); // socketId -> { userId, name, email, avatar, role }
 
 module.exports = (io) => {
   // Socket auth middleware
@@ -26,7 +26,7 @@ module.exports = (io) => {
     }
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     console.log('User connected:', socket.id, socket.user?.name || 'anonymous');
 
     // Track online users
@@ -34,14 +34,26 @@ module.exports = (io) => {
       onlineUsers.set(socket.id, {
         userId: socket.user._id.toString(),
         name: socket.user.name,
-        email: socket.user.email
+        email: socket.user.email,
+        avatar: socket.user.avatar || '',
+        role: socket.user.role
       });
       
       // Join personal notification room
       socket.join(`user:${socket.user._id}`);
       
-      // Update lastSeen
-      User.findByIdAndUpdate(socket.user._id, { lastSeen: new Date(), isActive: true }).exec();
+      // Update lastSeen & isActive
+      await User.findByIdAndUpdate(socket.user._id, { lastSeen: new Date(), isActive: true }).exec();
+      
+      // Auto-join existing DM rooms so messages arrive in real-time
+      const userId = socket.user._id.toString();
+      const dmRooms = await Message.distinct('room', { room: { $regex: /^dm:/ } });
+      for (const room of dmRooms) {
+        const ids = room.replace('dm:', '').split('_');
+        if (ids.includes(userId)) {
+          socket.join(room);
+        }
+      }
       
       // Broadcast online users list
       const uniqueOnline = [...new Map([...onlineUsers.values()].map(u => [u.userId, u])).values()];
@@ -76,9 +88,9 @@ module.exports = (io) => {
             content: data.content,
             type: data.type || 'text'
           });
-          await message.populate('sender', 'name email role');
+          await message.populate('sender', 'name email role avatar');
           
-          io.to(data.room).emit('receive_message', {
+          const payload = {
             _id: message._id,
             room: message.room,
             sender: message.sender,
@@ -87,7 +99,34 @@ module.exports = (io) => {
             reactions: [],
             edited: false,
             createdAt: message.createdAt
-          });
+          };
+
+          // For DM rooms, ensure both users' sockets are in the room
+          if (data.room.startsWith('dm:')) {
+            const ids = data.room.replace('dm:', '').split('_');
+            for (const [sid, u] of onlineUsers.entries()) {
+              if (ids.includes(u.userId)) {
+                const s = io.sockets.sockets.get(sid);
+                if (s) s.join(data.room);
+              }
+            }
+          }
+
+          io.to(data.room).emit('receive_message', payload);
+          
+          // For DMs, also emit a notification to the other user's personal room
+          if (data.room.startsWith('dm:')) {
+            const ids = data.room.replace('dm:', '').split('_');
+            const otherUserId = ids.find(id => id !== socket.user._id.toString());
+            if (otherUserId) {
+              io.to(`user:${otherUserId}`).emit('dm:new_message', {
+                room: data.room,
+                sender: message.sender,
+                content: message.content,
+                createdAt: message.createdAt
+              });
+            }
+          }
         }
       } catch (err) {
         console.error('Error saving message:', err.message);
@@ -183,12 +222,16 @@ module.exports = (io) => {
       });
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('User disconnected:', socket.id);
       onlineUsers.delete(socket.id);
       
       if (socket.user) {
-        User.findByIdAndUpdate(socket.user._id, { lastSeen: new Date(), isActive: false }).exec();
+        // Only set offline if no other sockets for this user
+        const stillOnline = [...onlineUsers.values()].some(u => u.userId === socket.user._id.toString());
+        if (!stillOnline) {
+          await User.findByIdAndUpdate(socket.user._id, { lastSeen: new Date(), isActive: false }).exec();
+        }
       }
       
       const uniqueOnline = [...new Map([...onlineUsers.values()].map(u => [u.userId, u])).values()];
