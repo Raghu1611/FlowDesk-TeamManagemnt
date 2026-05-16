@@ -1,179 +1,91 @@
-# FlowDesk — Real-Time Team Project Management System
+# FlowDesk - Real-Time Team Project Management System
 
-A production-ready, full-stack **MERN** collaborative task management platform with real-time features, role-based access control, drag-and-drop Kanban boards, team chat, analytics dashboards, and a professional dark mode.
-
-![MERN](https://img.shields.io/badge/Stack-MERN-61DAFB?style=flat-square)
-![Socket.IO](https://img.shields.io/badge/Real--Time-Socket.IO-010101?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+FlowDesk is a full-stack team project management application built with the MERN stack. It covers task management with Kanban boards, real-time team chat with direct messaging, project tracking, analytics dashboards, and role-based access control. The whole thing runs on React for the frontend and Node.js with Express on the backend, connected through REST APIs and WebSockets for live updates.
 
 ---
 
 ## Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Test Credentials](#test-credentials)
-- [Deployment](#deployment)
-- [Environment Variables](#environment-variables)
-- [API Documentation](#api-documentation)
-- [Role-Based Access](#role-based-access)
-- [Socket.IO Events](#socketio-events)
-- [Database Models](#database-models)
-- [Author](#author)
+- Features
+- Tech Stack
+- Architecture
+- Project Structure
+- Getting Started
+- Test Credentials
+- Deployment
+- Environment Variables
+- API Documentation
+- Role-Based Access
+- Chat Room Strategy
+- Socket.IO Events
+- Database Models
+- Author
 
 ---
 
 ## Features
 
-### Authentication & Authorization
-- JWT-based authentication with secure token management
-- Three roles: **Admin**, **Manager**, **Employee** with granular permissions
-- Protected routes on both frontend and backend
-- Password hashing with bcrypt
+### Authentication and Authorization
+
+The app uses JWT tokens for authentication. Passwords are hashed with bcrypt before storing. There are three user roles - Admin, Manager, and Employee - each with different permissions across the system. Both frontend routes and backend endpoints are protected based on the logged-in user's role.
 
 ### Task Management
-- Create, update, assign, and delete tasks
-- Drag-and-drop **Kanban Board** with 5 status columns (Backlog → Done)
-- Task priority levels: Low, Medium, High, Critical
-- File attachments via Cloudinary
-- Comments on tasks with real-time notifications
-- Role-based visibility — employees only see their own tasks
 
-### Real-Time Collaboration (Socket.IO)
-- **Live chat** with role-based channels (General, Engineering, Management, Leadership)
-- Real-time task updates without page refresh
-- Typing indicators in chat
-- Online user presence tracking
-- Instant notifications on task assignment and comments
+Users can create, update, assign, and delete tasks. There is a full drag-and-drop Kanban board with five columns going from Backlog through To Do, In Progress, In Review, and finally Done. Tasks have priority levels (Low, Medium, High, Critical) and can have file attachments uploaded through Cloudinary. You can add comments on tasks and everyone involved gets notified in real time. Employees only see tasks assigned to them while admins and managers can see everything.
+
+### Real-Time Chat
+
+The chat system supports multiple channel types. There are static channels like General, Announcements, Engineering, Design, Management, and Leadership, each with role-based access. Project channels are automatically created for every project so team members can discuss work in context.
+
+Direct messaging lets any two users have a private conversation. You can click the message icon in the Direct Messages section of the sidebar, pick a user, and start chatting. Messages show up in real time for both sides.
+
+Chat also supports editing messages within a 2-minute window, deleting messages for yourself or for everyone (admins can delete any message), and emoji reactions with a quick-pick panel of 8 common emojis. Reactions show counts and highlight if you have reacted.
+
+### Online Status and Last Seen
+
+Every user's online or offline status is tracked in real time through Socket.IO. When someone is connected, a green dot appears next to their name. When they disconnect, the system records their last seen time and shows it as a relative time like "5m ago" or "2h ago". This works across the DM sidebar, chat headers, and message avatars. If a user has multiple tabs open, they only show as offline when all tabs are closed.
 
 ### Project Management
-- Create and manage projects with team member assignment
-- Project status tracking (Active, Completed, Archived)
-- Project-linked tasks
 
-### Reports & Analytics
-- Task completion charts (Area, Bar, Pie/Donut)
-- Priority and status distribution visualization
-- Activity logs with entity filtering and pagination
-- Summary cards with completion rate
+Admins and managers can create projects, assign team members, set priorities, and track status (Active, Completed, Archived). Each project automatically gets its own chat channel visible to project members.
+
+### Reports and Analytics
+
+The dashboard has task completion charts using area, bar, and pie/donut visualizations. There are summary cards showing completion rates, priority distribution, and status breakdowns. Activity logs track actions across the system with filtering and pagination.
 
 ### Team Management
-- View all team members with department grouping
-- Online/offline status indicators
-- Role management (Admin only)
 
-### Settings & Profile
-- Edit profile (name, phone, bio, department)
-- Change password with current password verification
-- Dark/Light theme toggle with localStorage persistence
-- Account information display
+Admins can view all team members grouped by department, see who is online or offline, and change user roles. The team page shows each member's profile info and current status.
 
-### UI/UX
-- Professional design system with Stripe/Linear-inspired aesthetics
-- Responsive layout (mobile sidebar, adaptive grids)
-- Dark mode with deep blacks and proper depth shadows
-- Skeleton loading states, glass morphism effects
-- Smooth animations (fade-in, slide-up) via Framer Motion
+### Settings and Profile
+
+Users can edit their profile including name, phone, bio, and department. There is a password change feature that requires the current password. Profile avatars can be uploaded directly through Cloudinary - hover over your avatar in Settings and click to upload a new photo. The app supports dark and light themes with the preference saved in local storage.
+
+### User Interface
+
+The design follows an iOS-inspired color system with clean surfaces and proper depth. Light mode uses a soft gray background with blue accents. Dark mode uses true OLED black backgrounds with adjusted accent colors. The layout is fully responsive with a collapsible sidebar on mobile. Animations are handled through Framer Motion with fade-in and slide-up effects. Login and register pages have a professional look with password visibility toggles and a password strength indicator on signup.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 19, Vite 8, Tailwind CSS v4 |
-| **State Management** | Redux Toolkit |
-| **Backend** | Node.js, Express 5 |
-| **Database** | MongoDB, Mongoose 9 |
-| **Real-Time** | Socket.IO 4 |
-| **Authentication** | JWT + bcryptjs |
-| **Validation** | Zod v4 (frontend + backend) |
-| **File Uploads** | Cloudinary + Multer |
-| **Charts** | Recharts |
-| **Drag & Drop** | @hello-pangea/dnd |
-| **Animations** | Framer Motion |
-| **API Docs** | Swagger (swagger-jsdoc + swagger-ui-express) |
-| **Security** | Helmet, express-rate-limit, CORS |
+Frontend - React 19 with Vite 8 for bundling, Tailwind CSS v4 for styling, Redux Toolkit for state management, Socket.IO client for real-time communication, Recharts for data visualization, hello-pangea/dnd for drag and drop, Framer Motion for animations, react-hook-form with Zod for form validation, and lucide-react for icons.
+
+Backend - Node.js with Express 5, Mongoose 9 for MongoDB, JWT and bcryptjs for authentication, Socket.IO 4 for WebSockets, Zod v4 for request validation, Cloudinary with Multer for file and image uploads, Helmet and express-rate-limit for security, and Swagger for API documentation.
+
+Database - MongoDB Atlas.
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT (React)                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │
-│  │  Pages   │ │Components│ │  Redux   │ │ Socket.IO    │   │
-│  │ (Routes) │ │  (UI)    │ │  Store   │ │  Client      │   │
-│  └────┬─────┘ └──────────┘ └────┬─────┘ └──────┬───────┘   │
-│       │          Axios API       │              │           │
-└───────┼──────────────────────────┼──────────────┼───────────┘
-        │         HTTP/REST        │   WebSocket  │
-┌───────┼──────────────────────────┼──────────────┼───────────┐
-│       ▼                          ▼              ▼           │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │
-│  │  Routes  │ │Middleware │ │Controllers│ │  Socket.IO   │   │
-│  │ (Express)│ │(Auth,Zod)│ │ (Logic)  │ │  Server      │   │
-│  └──────────┘ └──────────┘ └────┬─────┘ └──────────────┘   │
-│                                  │                          │
-│                          ┌───────▼───────┐                  │
-│                          │   Mongoose    │                  │
-│                          │   Models      │                  │
-│                          └───────┬───────┘                  │
-│                     SERVER (Node.js + Express)              │
-└──────────────────────────┼──────────────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │   MongoDB   │
-                    │   Atlas     │
-                    └─────────────┘
-```
+The frontend is a single-page React application that talks to the backend through Axios for REST calls and Socket.IO for real-time events. The backend is an Express server with route handlers organized into controllers. Mongoose models define the database schemas. Socket.IO runs alongside Express on the same server for live chat, presence tracking, and real-time notifications. File uploads go through Multer to Cloudinary and the URLs are stored in MongoDB.
 
 ---
 
 ## Project Structure
 
-```
-flowdesk-team-management/
-├── client/                     # React frontend
-│   ├── src/
-│   │   ├── api/                # Axios API service layer
-│   │   ├── app/                # Redux store configuration
-│   │   ├── components/
-│   │   │   ├── analytics/      # Charts & stats cards
-│   │   │   ├── layout/         # AppLayout, Sidebar, Navbar, AuthLayout
-│   │   │   ├── tasks/          # CreateTaskModal
-│   │   │   └── ui/             # ThemeToggle
-│   │   ├── context/            # ThemeContext (dark mode)
-│   │   ├── features/           # Redux slices (auth, tasks, projects, notifications)
-│   │   ├── pages/              # Route pages
-│   │   │   ├── auth/           # Login, Register
-│   │   │   ├── chat/           # Real-time team chat
-│   │   │   ├── dashboard/      # Analytics dashboard
-│   │   │   ├── kanban/         # Drag-and-drop board
-│   │   │   ├── projects/       # Project management
-│   │   │   ├── reports/        # Reports & activity logs
-│   │   │   ├── settings/       # Profile & preferences
-│   │   │   ├── tasks/          # Task list & detail view
-│   │   │   └── team/           # Team members
-│   │   └── routes/             # React Router config
-│   └── index.html
-├── server/                     # Express backend
-│   ├── src/
-│   │   ├── config/             # Database connection
-│   │   ├── controllers/        # Route handlers
-│   │   ├── docs/               # Swagger setup
-│   │   ├── middleware/          # Auth, validation, file upload
-│   │   ├── models/             # Mongoose schemas
-│   │   ├── routes/             # Express route definitions
-│   │   └── sockets/            # Socket.IO event handlers
-│   ├── seed.js                 # Database seeder
-│   └── server.js               # Entry point
-└── README.md
-```
+The repository has two main folders. The client folder contains the React frontend with pages for auth, chat, dashboard, kanban, projects, tasks, and settings. API calls are in the api folder, Redux slices are in the features folder, and reusable components are organized under components. The server folder has the Express backend with controllers, models, routes, middleware, sockets, and config split into their own directories. There is also a seed.js file to populate the database with sample data.
 
 ---
 
@@ -181,15 +93,13 @@ flowdesk-team-management/
 
 ### Prerequisites
 
-- **Node.js** v18 or higher
-- **MongoDB** (Atlas cloud or local instance)
-- **npm** or **yarn**
+You need Node.js version 18 or higher, a MongoDB instance (Atlas or local), and npm.
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Raghu1611/flowdesk-team-management.git
-cd flowdesk-team-management
+git clone https://github.com/Raghu1611/FlowDesk-TeamManagemnt.git
+cd FlowDesk-TeamManagemnt
 ```
 
 ### 2. Setup the backend
@@ -199,13 +109,18 @@ cd server
 npm install
 ```
 
-Create a `.env` file in the `server/` directory (see [Environment Variables](#environment-variables)).
+Create a .env file in the server folder with the variables listed in the Environment Variables section below.
 
 Start the server:
 
 ```bash
-npm start        # Production
-npm run dev      # Development (with nodemon)
+npm start
+```
+
+For development with auto-reload:
+
+```bash
+npm run dev
 ```
 
 ### 3. Setup the frontend
@@ -216,7 +131,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at **http://localhost:5173**
+The frontend will be available at http://localhost:5173
 
 ### 4. Seed the database (optional)
 
@@ -225,60 +140,53 @@ cd server
 node seed.js
 ```
 
-This creates sample users, projects, and tasks for testing.
+This creates sample users, projects, and tasks so you can explore the app right away.
 
 ### 5. Access the application
 
-- **Frontend**: http://localhost:5173
-- **Swagger API Docs**: http://localhost:5000/api-docs
-- **Health Check**: http://localhost:5000/api/health
+- Frontend runs at http://localhost:5173
+- Swagger API docs are at http://localhost:5000/api-docs
+- Health check endpoint is at http://localhost:5000/api/health
 
 ---
 
 ## Test Credentials
 
-Run `node seed.js` inside the `server/` folder to create sample data, then log in with:
+Run node seed.js inside the server folder to create the sample data, then log in with any of these accounts:
 
-| Role | Email | Password |
-|------|-------|----------|
-| **Admin** | `admin@flowdesk.com` | `Admin@123` |
-| **Manager** | `manager@flowdesk.com` | `Manager@123` |
-| **Employee** | `john@flowdesk.com` | `Employee@123` |
-| **Employee** | `emily@flowdesk.com` | `Employee@123` |
-| **Employee** | `mike@flowdesk.com` | `Employee@123` |
+Admin - admin@flowdesk.com / Admin@123
 
-> The seed script also creates 3 sample projects and 12 tasks so you can explore the full application immediately.
+Manager - manager@flowdesk.com / Manager@123
+
+Employee - john@flowdesk.com / Employee@123
+
+Employee - emily@flowdesk.com / Employee@123
+
+Employee - mike@flowdesk.com / Employee@123
+
+The seed script also creates 3 sample projects and 12 tasks with different statuses and priorities.
 
 ---
 
 ## Deployment
 
-### Deploy Backend (Render / Railway)
+### Deploy Backend on Render or Railway
 
-1. Push the repo to GitHub.
-2. Create a new **Web Service** on [Render](https://render.com) or [Railway](https://railway.app).
-3. Set the **Root Directory** to `server`.
-4. Set **Build Command**: `npm install`
-5. Set **Start Command**: `node server.js`
-6. Add all [Environment Variables](#environment-variables) in the dashboard.
+Push the repository to GitHub. Create a new Web Service on Render or Railway. Set the root directory to server. Set the build command to npm install and the start command to node server.js. Add all the environment variables from the section below in the service dashboard.
 
-### Deploy Frontend (Vercel)
+### Deploy Frontend on Vercel
 
-1. Import the repo on [Vercel](https://vercel.com).
-2. Set the **Root Directory** to `client`.
-3. Framework Preset: **Vite**.
-4. Add an environment variable `VITE_API_URL` pointing to your deployed backend URL.
-5. Deploy.
+Import the repository on Vercel. Set the root directory to client. Choose Vite as the framework preset. Add an environment variable called VITE_API_URL pointing to your deployed backend URL. Deploy it.
 
-> After deploying both, update `CLIENT_URL` in the backend env to match the Vercel URL.
+After deploying both, update the CLIENT_URL variable in the backend environment to match the Vercel URL so CORS works correctly.
 
 ---
 
 ## Environment Variables
 
-Create a `server/.env` file with the following keys:
+Create a file called .env inside the server folder with these values:
 
-```env
+```
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
@@ -289,114 +197,162 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-| Variable | Description |
-|----------|-------------|
-| `PORT` | Server port (default: `5000`) |
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret key for JWT signing |
-| `JWT_EXPIRES_IN` | Token expiration (e.g., `7d`) |
-| `CLIENT_URL` | Frontend URL for CORS |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name for file uploads |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+PORT is the server port, defaults to 5000. MONGODB_URI is your MongoDB connection string from Atlas or local. JWT_SECRET is a secret key used to sign tokens. JWT_EXPIRES_IN controls how long tokens last, like 7d for seven days. CLIENT_URL is the frontend URL needed for CORS. The three Cloudinary variables are for file and avatar uploads.
 
-> ⚠️ **Never commit `.env` files.** The `.gitignore` is configured to exclude them.
+Never commit the .env file. The gitignore is already configured to exclude it.
 
 ---
 
 ## API Documentation
 
-Once the server is running, interactive Swagger docs are available at:
-
-```
-http://localhost:5000/api-docs
-```
+When the server is running, interactive Swagger docs are available at http://localhost:5000/api-docs
 
 ### Key Endpoints
 
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| POST | `/api/v1/auth/register` | Register new user | Public |
-| POST | `/api/v1/auth/login` | Login | Public |
-| GET | `/api/v1/auth/me` | Get current user | Authenticated |
-| GET | `/api/v1/tasks` | Get tasks (role-filtered) | Authenticated |
-| POST | `/api/v1/tasks` | Create task | Authenticated |
-| PATCH | `/api/v1/tasks/:id` | Update task | Authenticated |
-| DELETE | `/api/v1/tasks/:id` | Delete task | Admin/Manager/Reporter |
-| POST | `/api/v1/tasks/:id/comments` | Add comment | Authenticated |
-| POST | `/api/v1/tasks/:id/attachments` | Upload attachment | Authenticated |
-| PATCH | `/api/v1/users/profile` | Update own profile | Authenticated |
-| PATCH | `/api/v1/users/password` | Change password | Authenticated |
-| PATCH | `/api/v1/users/:id/role` | Change user role | Admin only |
-| GET | `/api/v1/messages/rooms` | Get accessible channels | Authenticated |
-| GET | `/api/v1/messages/:room` | Get room messages | Authenticated |
-| GET | `/api/v1/dashboard/stats` | Dashboard statistics | Authenticated |
-| GET | `/api/v1/activity` | Activity logs | Authenticated |
-| GET | `/api/v1/notifications` | Get notifications | Authenticated |
-| PATCH | `/api/v1/notifications/read-all` | Mark all read | Authenticated |
-| GET/POST/PATCH/DELETE | `/api/v1/projects` | Project CRUD | Admin/Manager |
+POST /api/v1/auth/register - Register a new user (public)
+
+POST /api/v1/auth/login - Log in and get a token (public)
+
+GET /api/v1/auth/me - Get the currently logged-in user (authenticated)
+
+GET /api/v1/tasks - Get tasks filtered by role (authenticated)
+
+POST /api/v1/tasks - Create a new task (authenticated)
+
+PATCH /api/v1/tasks/:id - Update a task (authenticated)
+
+DELETE /api/v1/tasks/:id - Delete a task (admin, manager, or reporter)
+
+POST /api/v1/tasks/:id/comments - Add a comment to a task (authenticated)
+
+POST /api/v1/tasks/:id/attachments - Upload a file attachment (authenticated)
+
+PATCH /api/v1/users/profile - Update your own profile (authenticated)
+
+POST /api/v1/users/avatar - Upload a profile avatar image (authenticated)
+
+PATCH /api/v1/users/password - Change your password (authenticated)
+
+PATCH /api/v1/users/:id/role - Change a user's role (admin only)
+
+GET /api/v1/messages/rooms - Get all accessible chat rooms (authenticated)
+
+GET /api/v1/messages/users - Get all users with online status for DMs (authenticated)
+
+GET /api/v1/messages/:room - Get messages for a specific room (authenticated)
+
+PATCH /api/v1/messages/:id/edit - Edit a message within 2 minutes (authenticated)
+
+PATCH /api/v1/messages/:id/delete-for-me - Hide a message for yourself (authenticated)
+
+DELETE /api/v1/messages/:id/delete-for-everyone - Delete a message for all users (admin or sender)
+
+POST /api/v1/messages/:id/react - Toggle an emoji reaction on a message (authenticated)
+
+GET /api/v1/dashboard/stats - Get dashboard statistics (authenticated)
+
+GET /api/v1/activity - Get activity logs (authenticated)
+
+GET /api/v1/notifications - Get your notifications (authenticated)
+
+PATCH /api/v1/notifications/read-all - Mark all notifications as read (authenticated)
+
+Project endpoints for create, read, update, and delete are under /api/v1/projects (admin and manager only)
 
 ---
 
 ## Role-Based Access
 
-| Feature | Admin | Manager | Employee |
-|---------|:-----:|:-------:|:--------:|
-| View all tasks | ✅ | ✅ | ❌ (own only) |
-| Create tasks | ✅ | ✅ | ✅ (self-assign) |
-| Assign tasks to others | ✅ | ✅ | ❌ |
-| Reassign tasks | ✅ | ✅ | ❌ |
-| Delete any task | ✅ | ✅ | ❌ (own only) |
-| Manage projects | ✅ | ✅ | ❌ |
-| View team members | ✅ | ❌ | ❌ |
-| Change user roles | ✅ | ❌ | ❌ |
-| Reports & analytics | ✅ | ✅ | ❌ |
-| General / Engineering chat | ✅ | ✅ | ✅ |
-| Management channel | ✅ | ✅ | ❌ |
-| Leadership channel | ✅ | ❌ | ❌ |
-| Edit own profile | ✅ | ✅ | ✅ |
+Admin has full access to everything. They can view and manage all tasks, create and manage projects, view team members, change user roles, access all chat channels including Leadership, see reports and analytics, and delete any chat message.
+
+Manager can view all tasks, create and assign tasks, manage projects, access General, Engineering, Design, and Management channels, and see reports and analytics. They cannot change user roles or access the Leadership channel.
+
+Employee can view and manage only their own assigned tasks, create tasks assigned to themselves, access General, Engineering, Design, and Announcements channels, edit their own profile, and use direct messaging. They cannot manage projects, view team members, change roles, or access restricted channels.
+
+All roles can use direct messaging to chat privately with any other user, edit their own messages within 2 minutes, react to messages with emojis, and toggle between dark and light themes.
+
+---
+
+## Chat Room Strategy
+
+Each channel type maps to a Socket.IO room.
+
+The general channel uses room ID "general" and all users join it on login.
+
+Team channels like engineering, design, management, and leadership are static rooms with role-based access. Management is for admins and managers. Leadership is admin only.
+
+The announcements channel is readable by everyone but only admins and managers typically post there.
+
+Project channels use the room ID pattern "project:" followed by the project ID. Only project members (assigned team members, the project manager, and admins) can access these. They are created automatically when a project exists.
+
+Direct messages use the room ID pattern "dm:" followed by both user IDs sorted alphabetically and joined with an underscore. This means both users always get the same room ID regardless of who initiates the conversation. Only the two participants can read or send messages in a DM room.
+
+When a user connects through Socket.IO, the server automatically joins them into their personal notification room and any existing DM rooms they are part of. The server also broadcasts the updated online users list to everyone.
 
 ---
 
 ## Socket.IO Events
 
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `join_room` | Client → Server | Join a chat room |
-| `leave_room` | Client → Server | Leave a chat room |
-| `send_message` | Client → Server | Send chat message |
-| `receive_message` | Server → Client | Receive chat message |
-| `typing_start` | Bidirectional | User started typing |
-| `typing_stop` | Bidirectional | User stopped typing |
-| `task:created` | Server → Client | New task created |
-| `task:updated` | Server → Client | Task was updated |
-| `task:deleted` | Server → Cli
-ent | Task was deleted |
-| `notification:new` | Server → Client | New notification |
-| `users:online` | Server → Client | Online users list |
+join_room - Sent from client to server when entering a chat room.
+
+leave_room - Sent from client to server when leaving a chat room.
+
+send_message - Sent from client to server to post a new message. The server saves it to the database, populates the sender info, and broadcasts it to the room.
+
+receive_message - Sent from server to all clients in the room when a new message arrives.
+
+edit_message - Sent from client to server to edit a message. Only works within 2 minutes and only for your own messages. The server broadcasts the update to the room.
+
+message:edited - Sent from server to clients when a message has been edited.
+
+delete_for_me - Sent from client to server to hide a message for yourself only.
+
+message:deleted_for_me - Sent from server back to the requesting client.
+
+delete_for_everyone - Sent from client to server. Works for admin (any message) or the sender.
+
+message:deleted_for_everyone - Sent from server to all clients in the room.
+
+toggle_reaction - Sent from client to server to add or remove an emoji reaction.
+
+message:reaction_updated - Sent from server to all clients in the room with updated reactions.
+
+typing_start and typing_stop - Sent both ways to show typing indicators.
+
+dm:new_message - Sent from server to the recipient's personal room when they get a new DM.
+
+users:online - Sent from server to all connected clients whenever someone connects or disconnects. Contains the list of currently online users.
+
+task:created, task:updated, task:deleted - Sent from server to clients when task changes happen.
+
+notification:new - Sent from server to a specific user when they receive a notification.
 
 ---
 
 ## Database Models
 
-| Model | Key Fields |
-|-------|-----------|
-| **User** | name, email, password (hashed), role, department, phone, bio, avatar |
-| **Task** | title, description, status, priority, assignee, reporter, project, comments, attachments, labels |
-| **Project** | title, description, status, members, priority, dates, tags |
-| **Message** | room, sender, content, type, readBy |
-| **Notification** | recipient, sender, type, title, message, read status |
-| **ActivityLog** | user, action, entity, entityId, details |
+User - Stores name, email, hashed password, role (admin/manager/employee), department, phone, bio, avatar URL, isActive boolean for online status, and lastSeen timestamp. Passwords are automatically hashed before saving.
+
+Task - Stores title, description, status (backlog/todo/in-progress/in-review/done), priority (low/medium/high/critical), assignee, reporter, project reference, comments array, attachments array, and labels.
+
+Project - Stores title, description, status (active/completed/archived), members array, manager reference, priority, date range, and tags.
+
+Message - Stores room ID, sender reference, content text, message type (text/file/system), attachment info, readBy array, edited flag with editedAt timestamp, deletedFor array of user IDs, deletedForEveryone flag, and reactions array where each reaction has an emoji string and a user reference.
+
+Notification - Stores recipient, sender, notification type, title, message text, and read status.
+
+ActivityLog - Stores user, action performed, entity type, entity ID, and additional details.
 
 ---
 
 ## Author
 
-**Raghu** — [@Raghu1611](https://github.com/Raghu1611)
-📧 dhanunjay1611@gmail.com
+Raghu - github.com/Raghu1611
+
+Email - dhanunjay1611@gmail.com
 
 ---
 
 ## License
 
-This project is built as a MERN Stack assessment submission.
+This project was built as a MERN Stack assessment submission.
