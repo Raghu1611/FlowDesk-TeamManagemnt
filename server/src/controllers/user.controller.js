@@ -36,13 +36,30 @@ const updateUserRole = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const allowedFields = ['name', 'phone', 'bio', 'department', 'avatar'];
+    const allowedFields = ['name', 'phone', 'bio', 'department'];
     const updates = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     }
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: req.file.path },
+      { new: true }
+    ).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     res.json({ success: true, data: user });
@@ -69,4 +86,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, updateUserRole, updateProfile, changePassword };
+module.exports = { getAllUsers, updateUserRole, updateProfile, uploadAvatar, changePassword };

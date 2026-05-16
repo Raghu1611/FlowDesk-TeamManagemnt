@@ -1,7 +1,8 @@
 const express = require('express');
-const { getAllUsers, updateUserRole, updateProfile, changePassword } = require('../controllers/user.controller');
+const { getAllUsers, updateUserRole, updateProfile, uploadAvatar, changePassword } = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const { validate, updateRoleSchema } = require('../middleware/validate.middleware');
+const upload = require('../middleware/upload.middleware');
 
 const router = express.Router();
 
@@ -46,6 +47,29 @@ router.get('/', protect, getAllUsers);
  *         description: Profile updated
  */
 router.patch('/profile', protect, updateProfile);
+
+/**
+ * @swagger
+ * /users/avatar:
+ *   post:
+ *     summary: Upload profile avatar
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded
+ */
+router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 
 /**
  * @swagger

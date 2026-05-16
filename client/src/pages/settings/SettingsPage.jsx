@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { User, Mail, Phone, Building2, FileText, Lock, Eye, EyeOff, Camera, Shield, Save, Loader2 } from 'lucide-react';
-import { updateProfileAPI, changePasswordAPI } from '../../api/user.api';
+import { updateProfileAPI, changePasswordAPI, uploadAvatarAPI } from '../../api/user.api';
 import { updateUser } from '../../features/auth/authSlice';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
@@ -15,6 +15,8 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -54,6 +56,21 @@ const SettingsPage = () => {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to change password');
     } finally { setSaving(false); }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return toast.error('Please select an image file');
+    if (file.size > 5 * 1024 * 1024) return toast.error('Image must be under 5MB');
+    try {
+      setUploadingAvatar(true);
+      const res = await uploadAvatarAPI(file);
+      dispatch(updateUser(res.data));
+      toast.success('Avatar updated');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload avatar');
+    } finally { setUploadingAvatar(false); }
   };
 
   const avatarUrl = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`;
@@ -100,9 +117,19 @@ const SettingsPage = () => {
                 alt="Avatar"
                 className="w-20 h-20 rounded-2xl ring-4 ring-background-surface shadow-cardHover object-cover"
               />
-              <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
-                <Camera className="w-5 h-5 text-white" />
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+              >
+                {uploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
             </div>
             <div>
               <h2 className="text-lg font-display font-bold text-text-primary">{user?.name}</h2>

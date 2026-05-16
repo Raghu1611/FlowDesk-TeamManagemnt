@@ -15,6 +15,15 @@ export const updateProfileAPI = async (data) => {
   return response.data;
 };
 
+export const uploadAvatarAPI = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const response = await api.post('/users/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
 export const changePasswordAPI = async (data) => {
   const response = await api.patch('/users/password', data);
   return response.data;
